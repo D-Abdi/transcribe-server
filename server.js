@@ -41,7 +41,7 @@ const initDgConnection = (disconnect) => {
     );
 
     // Clear the Deepgram live connection when the client disconnects
-    globalSocket.on("disconnect", async (event) => {
+    globalSocket.on("disconnect", async () => {
         dgLiveObj.finish();
     })
 };
@@ -116,7 +116,7 @@ const addDeepgramTranscriptListener = (dg) => {
  * @param dg
  */
 const addDeepgramOpenListener = (dg) => {
-    dg.addListener("open", async (msg) =>
+    dg.addListener("open", async () =>
         console.log(`dgLive WEBSOCKET CONNECTION OPEN!`)
     );
 };
@@ -126,7 +126,7 @@ const addDeepgramOpenListener = (dg) => {
  * @param dg
  */
 const addDeepgramCloseListener = (dg) => {
-    dg.addListener("close", async (msg) => {
+    dg.addListener("close", async () => {
         console.log(`dgLive CONNECTION CLOSED!`);
     });
 };
