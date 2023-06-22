@@ -1,13 +1,12 @@
 import path from "path";
 import {fileURLToPath} from "url";
 import 'dotenv/config'
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 import express from "express";
 import {createServer} from "http";
 import {Server} from "socket.io";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.static("public/"));
@@ -41,26 +40,42 @@ const initDgConnection = (disconnect) => {
         dgPacketResponse(event, dgLiveObj)
     );
 
+    // Clear the Deepgram live connection when the client disconnects
     globalSocket.on("disconnect", async (event) => {
         dgLiveObj.finish();
     })
 };
 
+/**
+ * Create a websocket connection to the client
+ * Set globalSocket to the socket that is created
+ * Create a new Deepgram object
+ * Initialize the Deepgram connection
+ */
 const createWebsocket = () => {
     io = new Server(httpServer, {transports: "websocket"});
+
     io.on("connection", (socket) => {
         console.log(`Connected on server side with ID: ${socket.id}`);
         globalSocket = socket;
         deepgram = createNewDeepgram();
         initDgConnection(false);
     });
-
-
 };
 
+/**
+ * Create a new Deepgram object
+ * @returns {Deepgram}
+ */
 const createNewDeepgram = () => {
     return new Deepgram("42ae5122e971dc797c582edaf88bc43f05e5826e");
 }
+
+/**
+ * Create a new Deepgram live object
+ * @param dg
+ * @returns {WebSocket}
+ */
 const createNewDeepgramLive = (dg) => {
     return dg.transcription.live({
         language: "en",
@@ -70,7 +85,12 @@ const createNewDeepgramLive = (dg) => {
     });
 }
 
-
+/**
+ * Add a listener to the Deepgram live object
+ * When a transcript is received, send it to the client
+ * Log the transcript to the console
+ * @param dg
+ */
 const addDeepgramTranscriptListener = (dg) => {
     dg.addListener("transcriptReceived", async (dgOutput) => {
         let dgJSON = JSON.parse(dgOutput);
@@ -91,18 +111,30 @@ const addDeepgramTranscriptListener = (dg) => {
     });
 };
 
+/**
+ * Listen for the Deepgram live object to open
+ * @param dg
+ */
 const addDeepgramOpenListener = (dg) => {
     dg.addListener("open", async (msg) =>
         console.log(`dgLive WEBSOCKET CONNECTION OPEN!`)
     );
 };
 
+/**
+ * Listen for the Deepgram live object to close
+ * @param dg
+ */
 const addDeepgramCloseListener = (dg) => {
     dg.addListener("close", async (msg) => {
         console.log(`dgLive CONNECTION CLOSED!`);
     });
 };
 
+/**
+ * Listen for the Deepgram live object to throw an error
+ * @param dg
+ */
 const addDeepgramErrorListener = (dg) => {
     dg.addListener("error", async (msg) => {
         console.log("ERROR MESG", msg);
@@ -111,6 +143,11 @@ const addDeepgramErrorListener = (dg) => {
     });
 };
 
+/**
+ * Send a packet to the Deepgram live object
+ * @param event
+ * @param dg
+ */
 const dgPacketResponse = (event, dg) => {
     if (dg.getReadyState() === 1) {
         dg.send(event);
@@ -118,6 +155,4 @@ const dgPacketResponse = (event, dg) => {
 };
 
 httpServer.listen(3000);
-
-
 createWebsocket();
