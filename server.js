@@ -40,6 +40,10 @@ const initDgConnection = (disconnect) => {
     globalSocket.on("packet-sent", async (event) =>
         dgPacketResponse(event, dgLiveObj)
     );
+
+    globalSocket.on("disconnect", async (event) => {
+        dgLiveObj.finish();
+    })
 };
 
 const createWebsocket = () => {
